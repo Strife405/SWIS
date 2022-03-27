@@ -1,0 +1,1580 @@
+// database.cpp : This file contains the 'main' function. Program execution begins and ends there.
+//
+
+#include <fstream>
+#include <iostream>
+#include <stdio.h>
+#include <string>
+#include "Header.h"
+
+/*
+gole of main, take input and then eather create file or build a tree off of entered data, add a entry to the dictionaryand save it, or read from an entry and output it
+node structure is pointer array 26 long plus a parent pointer and data pointer and a string for locateing information, and a seperate data node that includes 24 ints and a pointer
+how tree is used, break string into indivisual lowercase charicters, find corrisponding #(a=0 b=1 c=2 ect) and go to the pointer that corrisponds with that number,
+			check the nodes saved string agenst what you are looking for, if so tie its data pointer to the head of the tree to be read from another function, if not
+			repeate for next letter until it is found. if it is found return a 1 if not 0. 
+				if 1 then go to a function that returns an int array of size 23 where the 23rd value
+				can eather be a 1 or a 0, if 1 then the next sign has already been tied to the head of the tree, if 0 then it is good to search for the next value
+			else
+				if 0 then go threw given string and put each letter on the list of words to be signed in reverse order
+how tree is first built, the first node has no string information tied to it, the first 26 pointers go to nodes that are attached to there, each of those nodes should normally be a 
+			single letter for best practace, then for all other words follow the tree as if it is a search until a null pointer is reached, at that point compare the current striing 
+			length with the saved one, if it is longer then place its information in the location of the null pointer
+			if it is the same then compare the words, if still the same just replace the sign information, if not do what is written 1 line above
+			if it is shorter then copy onto new node for the shorter word make all the changes to fully replace the current node, then when done continue from the beginning for the 
+			word that was replaced
+For tree building off of an existing file the first 5 bits are where to go off from the head (if it is null then make new node there) and if the 6th bit is a 0 then repeat untill 6th 
+			bit is a 1. When the 6th bit is a 1 then go the new node spesified in the last 5 (again if null make new node) then with this node we will give it its string. Its string
+			will be built letter by letter by 5 bits to decide what letter to goes in (0=a, 1=b ect) and the 6th bit says if there is another letter or not, if 0 then there is another
+			letter if 1 then its done with the string. Next it will make a data node and fill the int array first, it will give the numbers sequentially in 8 bits, the first bit is sign
+			bit, if 1 then negitive number the rest is just a number for all the 26 ints, the 24th int is used to notate where on the body the hand is and thus only uses 4 bits, then 
+			there will be a final bit, if it is 1make another data node off of this one and fill it again, if it is zero restart from beginning
+*/
+
+
+//things to add for sure, delete function:maybe to add, full list display, all dict files possibilities
+using namespace std;
+int main()
+{
+	string input, path, input2;
+	int values, counter, counter2, esc=0, other;
+	struct node* tree = NULL;
+	struct datanode* dnode = NULL;
+	struct datanode* dnode2 = NULL;
+	cout << "Please type in name of dictinary file, or type 0 to create new file\n";
+	cin >> input;
+	if (input == "0")
+	{
+		cout << "please type in the name of the new dictinary file:";
+		cin >> input;
+		ofstream wr;
+		wr.open("dict\\" + input + ".dict", fstream::app | fstream::out);
+		wr.close();
+		return	0;
+	}
+	cout << "opening file\n";
+	path = "dict\\" + input + ".dict";
+	ifstream fs;
+	fs.open(path, fstream::in);
+	if (fs.is_open())
+	{
+		fs.close();
+		////////////////////////////need tree build method here///////////////////////////////////////////////////////////////////////
+		tree = datab_.Treebuilder(path);
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		cout << "file opened\n";
+		while (1)
+		{
+			cout << "type the number of the action you would like to take\n1. Add entry/edit entry\n2.search database\n3.save changes\n4.delete entry\n5. close\n";
+			cin >> input;
+			if (input == "1")
+			{
+				esc = 0;
+				while (esc == 0)
+				{
+					cout << "Please enter the word you wish to give the positional data for:";
+					cin >> input2;
+					/////////////////////////////////////////////////////////////make sure only letters here//////////////////////////////////////////////////////
+					counter = 0;
+					esc = 1;
+					while (counter != input2.length())
+					{
+						if ((64 < input2[counter] && input2[counter] < 91) || (96 < input2[counter] && input2[counter] < 123))//if lowercase or uppercase
+						{
+						}
+						else
+						{
+							esc = 0;//try again
+						}
+						counter++;
+					}
+					if (esc == 0)//it errored
+					{
+						cout << "invalid charictor, please only use charicters a-z\n";
+					}
+				}
+				//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				cout << "Please input the 26 values to be used(range from 255)\n";
+				counter = 0;
+				while (counter != 26)
+				{
+					cin >> values;
+					if (values < 0 || values>255)
+					{
+						cout << "value out of range please try again\n";
+						counter--;
+					}
+					else
+					{
+						datab_.dnodemake(tree, counter, values);
+					}
+					counter++;
+				}
+				//////////////////////////////////////////////tree add/edit function///////////////////////////////////////////////////////////////////////////////////////
+				dnode = datab_.Treeadd(tree, input2);
+				///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				while (counter != 0)
+				{
+					while (counter != 1 && counter != 0)//first time should stiill be 26 from earlyer so it is neather
+					{
+						cout << "would you like to add another set of values to this entry?(type 1 for yes and 0 for no)\n";
+						cin >> counter;
+						if (counter != 1 && counter != 0)
+						{
+							cout << "invalid entry\n";
+						}
+					}
+					if (counter == 1)
+					{
+						cout << "Please input the 26 values to be used(range from 255)\n";
+						counter2 = 0;
+						while (counter2 != 26)
+						{
+							cin >> values;
+							if (values < 0 || values>255)
+							{
+								cout << "value out of range please try again\n";
+								counter2--;
+							}
+							else
+							{
+								datab_.dnodemake(tree, counter2, values);
+							}
+							counter2++;
+						}
+						//////////////////////////////////////more tree add edit stuff//////////////////////////////////////////////////////////////////////////////////
+						datab_.Treeadd2(dnode, tree);
+						///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+						counter++;
+					}
+				}
+			}
+			else
+			{
+				if (input == "2")
+				{
+					cout << "please input the word you would like the data on\n";
+					cin >> input2;
+					dnode=datab_.Datafind(tree, input2);
+					if (dnode != NULL)
+					{
+						counter = 0;
+						values = datab_.Datasize(dnode);
+						cout << input2 << "\n";
+						while (counter != values)
+						{
+							other = 0;
+							while (other != 26)
+							{
+								counter2 = datab_.Treesearch(dnode, other+(counter*26));
+								cout << counter2 << "   ";
+								other++;
+							}
+							cout << "\n";
+							counter++;
+						}
+					}
+					else
+					{
+						cout << "error word not found\n";
+					}
+					///////////////////////////////////////////////////////tree search function//////////////////////////////////////////////////////////////////////////
+				}
+				else
+				{
+					if (input == "3")
+					{
+						//////////////////////////////////////////////////////////tree save function/////////////////////////////////////////////////////////////
+						cout << "saveing\n\n";
+						datab_.Treesave1(tree, tree, path);
+						cout << "saved\n";
+					}
+					else
+					{
+						if (input == "4")
+						{
+							cout << "please enter the word you want to delete: ";
+							cin >> input;
+							///////////////////////////////////////node deleter////////////////////////////////////////////////////////////////////////////////
+							other=datab_.Deleter(tree, input);
+							if (other == -1)
+							{
+								cout << "error word not found\n";
+							}
+						}
+						else
+						{
+							if (input == "5")
+							{
+								return 0;
+							}
+							else
+							{
+								cout << "unrecognised command please enter the number of the choise you want\n";
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		cout << "failed to open\n";
+	}
+	return 0;
+}
+
+/*
+had to make this as you cant pass arrays so ill only pass in 1 value 26 times and make a data node on tree which will be passed on to the correct node later
+*/
+void datab::dnodemake(struct node* tree, int count, int value)
+{
+	struct datanode* dnode;
+	if (count == 0)//do we need a new data node
+	{
+		dnode = new struct datanode;
+		tree->datan = dnode;
+		dnode->data[0] = value;
+		return;
+	}
+	else//dnode already exists
+	{
+		dnode = tree->datan;
+		dnode->data[count] = value;
+		return;
+	}
+}
+
+/*
+	step 1:convert all letters of word to lowercase
+	step 2:walk 1 step down tree, if null go to step 3, else check if less then or equil to length of current word
+			if less, replace current node with this one, erase old connections on old node, fill in the new nodes data node, then call treefinder useing the 
+					 now unconnected node as argument 2, return the new datanode
+			if more, repeate step 2
+	step 3:create new node, wire as the next step and wire the parent node in, fill in name, make data node connect to data node, fill in data node, return data node
+*/
+struct datanode* datab::Treeadd(struct node* tree, string word)
+{
+	int counter = 0, len = word.length(), len2, askcon = 0, counter2 = 0, ret=0;//len is the length of the word, askcon is to convert letters into numbers where a=0 ect
+	char temp;
+	struct node* here;
+	struct node* old;
+	struct node* next;
+	struct datanode* there;
+	struct datanode* was = NULL;
+	struct datanode* trueth = NULL;
+	here = tree;
+	while (counter != len)//step 1
+	{
+		if (word[counter] < 96)//a=97
+		{
+			word[counter] = word[counter] + 32;//to convert to lowercase
+		}
+		counter++;
+	}
+	counter = 0;
+	while (1)
+	{
+		while (counter != len)
+		{
+ 			askcon = word[counter] - 97;//a=0, b=1, ect
+			len2 = here->name.length();
+			if (len <= len2)
+			{
+				if (len == len2)
+				{
+					if (word == here->name)//if its the same word
+					{
+						//step one delete all data nodes
+						while (here->datan != NULL)
+						{
+							there = here->datan;
+							while (there->next != NULL)
+							{
+								was = there;
+								there = there->next;
+							}
+							if (here->datan == there)
+							{
+								here->datan = NULL;
+							}
+							delete there;
+							if (was != NULL)
+							{
+								was->next = NULL;
+							}
+						}
+						//step two take the datanode off of tree and put it on this node
+						here->datan = tree->datan;
+						tree->datan = NULL;
+						if (ret == 0)//if we didnt have to rework the tree
+						{
+							return here->datan;
+						}
+						else
+						{
+							return trueth;
+						}
+					}
+					else//same length but different words step down tree or make new node
+					{
+						if (here->letters[askcon] == NULL)//make new node
+						{
+							struct node* newnode = new struct node;
+							here->letters[askcon] = newnode;
+							newnode->parent = here;
+							newnode->name = word;
+							newnode->datan = tree->datan;
+							tree->datan = NULL;
+							if (ret == 0)//if we didnt have to rework the tree
+							{
+								return newnode->datan;
+							}
+							else
+							{
+								return trueth;
+							}
+						}
+						else
+						{
+							here = here->letters[askcon];//next step
+						}
+					}
+				}
+				else
+				{
+					////////////////////shorter so replace//////////////////////
+					old = here->parent;
+					struct node* newnode = new struct node;
+					newnode->name = word;
+					newnode->datan = tree->datan;
+					tree->datan = NULL;
+					counter2 = 0;
+					while (counter2 != 26)
+					{
+						if (here->letters[counter2 != NULL])//update parents
+						{
+							next = here->letters[counter2];
+							next->parent = newnode;
+						}
+						if (old->letters[counter2] == here)//to quickly find which pointer pointed to it
+						{
+							old->letters[counter2] = newnode;
+							newnode->parent = old;
+							here->parent = NULL;
+						}
+						newnode->letters[counter2] = here->letters[counter2];//copy the pointers
+						here->letters[counter2] = NULL;//get rid of old pointers for later step
+						counter2++;
+					}
+					word = here->name;
+					len = word.length();
+					tree->datan = here->datan;
+					delete here;
+					here = tree;
+					counter = -1;//to go around the ++ at the end of the loop
+					if (ret == 0)
+					{
+						ret = 1;//rerun mode
+						trueth = newnode->datan;//what needes to be returned
+					}
+				}
+			}
+			else//more than current
+			{
+				if (here->letters[askcon] == NULL)//make new node
+				{
+					struct node* newnode = new struct node;
+					here->letters[askcon] = newnode;
+					newnode->parent = here;
+					newnode->name = word;
+					newnode->datan = tree->datan;
+					tree->datan = NULL;
+					if (ret == 0)//if we didnt have to rework the tree
+					{
+						return newnode->datan;
+					}
+					else
+					{
+						return trueth;
+					}
+				}
+				else
+				{
+					here = here->letters[askcon];//next step
+				}
+			}
+			counter++;
+		}
+		//at this point we are where this word should go as it is just a path created by following down the tree, so its eather replaceing the word or the same word
+		if (here->name == word)//is it the same word
+		{
+			//step one delete all data nodes
+			while (here->datan != NULL)
+			{
+				there = here->datan;
+				while (there->next != NULL)
+				{
+					was = there;
+					there = there->next;
+				}
+				if (here->datan == there)
+				{
+					here->datan = NULL;
+				}
+				delete there;
+				if (was != NULL)
+				{
+					was->next = NULL;
+				}
+			}
+			//step two take the datanode off of tree and put it on this node
+			here->datan = tree->datan;
+			tree->datan = NULL;
+			if (ret == 0)//if we didnt have to rework the tree
+			{
+				return here->datan;
+			}
+			else
+			{
+				return trueth;
+			}
+		}
+		else//replace
+		{
+			struct node* old;
+			old = here->parent;
+			struct node* newnode = new struct node;
+			newnode->name = word;
+			newnode->datan = tree->datan;
+			tree->datan = NULL;
+			counter2 = 0;
+			while (counter2 != 26)
+			{
+				if (here->letters[counter2 != NULL])//update parents
+				{
+					next = here->letters[counter2];
+					next->parent = newnode;
+				}
+				if (old->letters[counter2] == here)//to quickly find which pointer pointed to it
+				{
+					old->letters[counter2] = newnode;
+					newnode->parent = old;
+					here->parent = NULL;
+				}
+				newnode->letters[counter2] = here->letters[counter2];//copy the pointers
+				here->letters[counter2] = NULL;//get rid of old pointers for later step
+				counter2++;
+			}
+			word = here->name;
+			len = word.length();
+			tree->datan = here->datan;
+			delete here;
+			here = tree;
+			counter = 0;
+			if (ret == 0)
+			{
+				ret = 1;//rerun mode
+				trueth = newnode->datan;//what needes to be returned
+			}
+		}
+	}
+}
+
+/*
+run down the datanodes until the next data node is null, then make a datanode, attach it as the next one, then fill in its values
+*/
+void datab::Treeadd2(struct datanode* start, struct node* tree)
+{
+	int counter = 0;
+	struct datanode* dnode;
+	dnode = start;
+	while (dnode->next != NULL)
+	{
+		dnode = dnode->next;
+	}
+	dnode->next = tree->datan;
+	tree->datan = NULL;
+	return;
+}
+
+/*
+returns datapointer of the word in question or null pointer if word doesnt exist in tree
+*/
+struct datanode* datab::Datafind(struct node* tree, string find)
+{
+	int pather, counter = 0;
+	struct node* here;
+	here = tree;
+	while (counter!=find.length())
+	{
+		if (here->name == find)//we found the node
+		{
+			return here->datan;
+		}
+		pather = find[counter] - 97;//next letter
+		if (here->letters[pather] != NULL)
+		{
+			here = here->letters[pather];
+		}
+		else//its not here so error
+		{
+			return NULL;
+		}
+		counter++;
+	}
+	if (here->name == find)//final check
+	{
+		return here->datan;
+	}
+	return NULL;//didnt find it
+}
+
+/*
+returns amount of data nodes
+*/
+int datab::Datasize(struct datanode* here)
+{
+	int counter = 1;//we are on one so there is at least one
+	struct datanode* move;
+	move = here;
+	while (move->next != NULL)//if it is null return counter else go to the next node and add one to counter
+	{
+		move = move->next;
+		counter++;
+	}
+	return counter;
+}
+
+/*
+returns the value that num is asking for, ie if num=3 then it would return here->data[3], if num=27 then return (here->next)->data[27-26=1]
+*/
+int datab::Treesearch(struct datanode* here, int num)
+{
+	int number = num;
+	struct datanode* go;
+	go = here;
+	while (number > 25)//25 is all 26 values if you include 0
+	{
+		number = number - 26;
+		go = go->next;
+	}
+	//now at correct node
+	return go->data[number];
+}
+
+/*
+delete file, then make new one to be written to, then call treesave 2, finally return
+*/
+void datab::Treesave1(struct node* tree, struct node* here, string out)
+{
+	int counter = 0;
+	const char* by = out.c_str();
+	std::remove(by);//deletes the file
+	ofstream wr;
+	wr.open(out, fstream::app | fstream::out);//makes empty file to be written to
+	wr.close();
+	//
+	//return;//datanuke for debugging reasons
+	//
+	struct datanode* data = new struct datanode;//for passing data arrays though functions
+	while (counter != 26)
+	{
+		data->data[counter] = -1;//turning all values to invalid responses
+		counter++;
+	}
+	datab_.Treesave2(tree, here, out, data);//go to the save manager
+	//at this point might need to add padding bits and then call treesave 4 once more
+	if (data->data[0] != -1)
+	{
+		counter = 0;
+		while (counter != 8)
+		{
+			if (data->data[counter] == -1)
+			{
+				data->data[counter] = 0;//padding bits
+			}
+			counter++;
+		}
+		datab_.Treesave4(data, out);
+		delete data;
+	}
+	return;
+}
+
+/*
+1: call self on each node from a to z as long as not null 
+2: call nodesave function to save to file
+*/
+void datab::Treesave2(struct node* tree, struct node* here, string out, struct datanode* data)
+{
+	int counter = 0;
+	while (counter != 26)
+	{
+		if (here->letters[counter] != NULL)
+		{
+			datab_.Treesave2(tree, here->letters[counter], out, data);
+		}
+		counter++;
+	}
+	if (here != tree)//no need to run it for head
+	{
+		datab_.Treesave3(tree, here, out, data);//already went through all lower options
+	}
+	return;
+}
+
+/*
+datanode for left over data
+[5direction]+0 if need to go deeper from tree, if there add 1 if there, add all to datanode by if data->data[7]!=-1 run treesave 4, then repeate if we said we would
+
+*/
+void datab::Treesave3(struct node* tree, struct node* here, string out, struct datanode* data)
+{
+	int counter = 0, temp;
+	//out is output file
+	struct datanode* dnode;
+	struct node* walk = tree;
+	while (walk->name != here->name)
+	{
+		temp = here->name[counter] - 97;//convert to a=0, b=1 c=2 ect
+		if (temp - 16 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 16;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 8 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 8;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 4 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 4;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 2 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 2;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 1 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 1;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		//data for direction has been added, now to find if next point is what we are looking for
+		walk = walk->letters[(here->name[counter] - 97)];
+		if (walk->name == here->name)
+		{
+			datab_.dataadd(1, data);
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (data->data[7] != -1)//if we need to wright to the file
+		{
+			datab_.Treesave4(data, out);
+		}
+		counter++;
+	}
+	//at this point we are at the correct node, now to add the string in about the same way we made the 
+	counter = 0;
+	while (counter != walk->name.length())//while we arnt at the end of the string
+	{
+		temp = walk->name[counter] - 97;//convert to a=0, b=1 c=2 ect
+		if (temp - 16 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 16;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 8 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 8;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 4 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 4;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 2 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 2;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 1 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 1;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		//data for current letter added now add a 0 to the data if counter==here->name.length()-1 else add a one, then if we have 8 bits run treesave4
+		if ((counter + 1) == here->name.length())//are we at the last letter
+		{
+			datab_.dataadd(1, data);
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (data->data[7] != -1)//if we need to wright to the file
+		{
+			datab_.Treesave4(data, out);
+		}
+		counter++;
+	}
+	//path and sting info added, now for the datanode
+	//26 8 bit values, then if there is another datanode add a 0////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	dnode = here->datan;
+	while (dnode->next != NULL)//will only run this if there is a continuation
+	{
+		counter = 0;
+		while (counter != 26)
+		{
+			temp = dnode->data[counter];
+			if (temp - 128 >= 0)
+			{
+				datab_.dataadd(1, data);
+				temp = temp - 128;
+			}
+			else
+			{
+				datab_.dataadd(0, data);
+			}
+			if (temp - 64 >= 0)
+			{
+				datab_.dataadd(1, data);
+				temp = temp - 64;
+			}
+			else
+			{
+				datab_.dataadd(0, data);
+			}
+			if (temp - 32 >= 0)
+			{
+				datab_.dataadd(1, data);
+				temp = temp - 32;
+			}
+			else
+			{
+				datab_.dataadd(0, data);
+			}
+			if (temp - 16 >= 0)
+			{
+				datab_.dataadd(1, data);
+				temp = temp - 16;
+			}
+			else
+			{
+				datab_.dataadd(0, data);
+			}
+			if (temp - 8 >= 0)
+			{
+				datab_.dataadd(1, data);
+				temp = temp - 8;
+			}
+			else
+			{
+				datab_.dataadd(0, data);
+			}
+			if (temp - 4 >= 0)
+			{
+				datab_.dataadd(1, data);
+				temp = temp - 4;
+			}
+			else
+			{
+				datab_.dataadd(0, data);
+			}
+			if (temp - 2 >= 0)
+			{
+				datab_.dataadd(1, data);
+				temp = temp - 2;
+			}
+			else
+			{
+				datab_.dataadd(0, data);
+			}
+			if (temp - 1 >= 0)
+			{
+				datab_.dataadd(1, data);
+				temp = temp - 1;
+			}
+			else
+			{
+				datab_.dataadd(0, data);
+			}
+			datab_.Treesave4(data, out);//each time we add 8 bits so we can wright a char to the file
+			counter++;
+		}
+		datab_.dataadd(0, data);
+		if (data->data[7] != -1)//we added a 9th bit so it is possible that we need to wright 2 chars to file
+		{
+			datab_.Treesave4(data, out);
+		}
+		dnode = dnode->next;//go to the next node for more wrighting
+	}
+	counter = 0;
+	while (counter != 26)
+	{
+		temp = dnode->data[counter];
+		if (temp - 128 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 128;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 64 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 64;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 32 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 32;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 16 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 16;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 8 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 8;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 4 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 4;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 2 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 2;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		if (temp - 1 >= 0)
+		{
+			datab_.dataadd(1, data);
+			temp = temp - 1;
+		}
+		else
+		{
+			datab_.dataadd(0, data);
+		}
+		datab_.Treesave4(data, out);//each time we add 8 bits so we can wright a char to the file
+		counter++;
+	}
+	datab_.dataadd(1, data);//end of data for this node
+	if (data->data[7] != -1)//if we still have 8 bits
+	{
+		datab_.Treesave4(data, out);//each time we add 8 bits so we can wright a char to the file
+	}
+	return;
+}
+
+/*
+take 8 bits make into char wright into file, then move all 8 bits down
+*/
+void datab::Treesave4(struct datanode* data, std::string out)
+{
+	int temp = 0, counter = 0;
+	char ask;
+	if (data->data[0] == 1)
+	{
+		temp = temp + 128;
+	}
+	if (data->data[1] == 1)
+	{
+		temp = temp + 64;
+	}
+	if (data->data[2] == 1)
+	{
+		temp = temp + 32;
+	}
+	if (data->data[3] == 1)
+	{
+		temp = temp + 16;
+	}
+	if (data->data[4] == 1)
+	{
+		temp = temp + 8;
+	}
+	if (data->data[5] == 1)
+	{
+		temp = temp + 4;
+	}
+	if (data->data[6] == 1)
+	{
+		temp = temp + 2;
+	}
+	if (data->data[7] == 1)
+	{
+		temp = temp + 1;
+	}
+	ask = temp;//what to wright to the file
+	counter = 0;
+	while (counter != 18)//26-8=18
+	{
+		data->data[counter] = data->data[counter + 8];
+		counter++;
+	}
+	data->data[18] = -1;//make sure the last 8 are set correct
+	data->data[19] = -1;
+	data->data[20] = -1;
+	data->data[21] = -1;
+	data->data[22] = -1;
+	data->data[23] = -1;
+	data->data[24] = -1;
+	data->data[25] = -1;
+	//wright to file time
+	ofstream of;
+	of.open(out, std::ofstream::out | std::ofstream::app);
+	of << ask;
+	of.close();
+	return;
+}
+
+/*
+just to add a one or a 0 to the datanode
+go through data->data untill found -1
+rewright that data with int d
+return
+*/
+void datab::dataadd(int d, struct datanode* data)
+{
+	int c = 0;
+	while (data->data[c] != -1)
+	{
+		c++;
+	}
+	data->data[c] = d;
+	return;
+}
+
+/*For tree building off of an existing file the first 5 bits are where to go off from the head (if it is null then make new node there) and if the 6th bit is a 0 then repeat untill 6th 
+			bit is a 1. When the 6th bit is a 1 then go the new node spesified in the last 5 (again if null make new node) then with this node we will give it its string. Its string
+			will be built letter by letter by 5 bits to decide what letter to goes in (0=a, 1=b ect) and the 6th bit says if there is another letter or not, if 0 then there is another
+			letter if 1 then its done with the string. Next it will make a data node and fill the int array first, it will give the numbers sequentially in 9 bits, the first bit is sign
+			bit, if 1 then negitive number the rest is just a number for all the 23 ints, the 24th int is used to notate where on the body the hand is and thus only uses 4 bits, then 
+			there will be a final bit, if it is 1make another data node off of this one and fill it again, if it is zero restart from beginning
+*/
+struct node* datab::Treebuilder(string path)
+{
+	char next, temp;
+	int ec = 0, bc = 0, lc = 0, end = 0, svalue = 0, otherlc=0;//the event counter and bit counter and loop counter
+	int bina[16] = { -1 };
+	int b[8], f, mask[8];
+	string word;
+	mask[7] = 0x1;
+	mask[6] = 0x2;
+	mask[5] = 0x4;
+	mask[4] = 0x8;
+	mask[3] = 0x10;
+	mask[2] = 0x20;
+	mask[1] = 0x40;
+	mask[0] = 0x80;
+	struct node* tree = NULL;
+	struct node* here = NULL;
+	struct node* newnode = new struct node;
+	struct datanode* overhere = NULL;
+	tree = newnode;
+	here = tree;
+	ifstream fs;
+	fs.open(path, fstream::in);
+	if (fs.is_open())
+	{
+		while (end == 0)
+		{
+			//event 0 follow to correct node makeing nodes along the way
+			// event 1 add letters to the name
+			// event 2 add data node and fill data array+potential repeat until end,if end=1 no next data array then reset event counter, and ac
+			here = tree;//reset to top
+			while (ec == 0 && end == 0)//use 5 bits to find where to go, if no node is there make one,if 6th bit =1 ec++;
+			{
+				svalue = 0;//reset to not mess stuff up
+				if (bc < 6)//if we need more bits
+				{
+					if (fs.get(next))
+					{
+						f = 0;//counter 
+						while (f != 8)
+						{
+							if ((next & mask[f]) != 0)
+							{
+								bina[bc] = 1;
+								bc++;
+							}
+							else
+							{
+								bina[bc] = 0;
+								bc++;
+							}
+							f++;
+						}
+						f = 0;
+					}
+					else
+					{
+						end = 1;
+					}
+				}
+				//largest bit is at position 0
+				if (bina[0] == 1)
+				{
+					svalue = svalue + 16;
+				}
+				if (bina[1] == 1)
+				{
+					svalue = svalue + 8;
+				}
+				if (bina[2] == 1)
+				{
+					svalue = svalue + 4;
+				}
+				if (bina[3] == 1)
+				{
+					svalue = svalue + 2;
+				}
+				if (bina[4] == 1)
+				{
+					svalue++;
+				}
+				if (bina[5] == 1)
+				{
+					ec++;//if this is the node to have data added to it
+				}
+				while (lc != 10 && end ==0)
+				{
+					bina[lc] = bina[lc + 6];
+					lc++;
+				}
+				bina[10] = { -1 };
+				bina[11] = { -1 };
+				bina[12] = { -1 };
+				bina[13] = { -1 };
+				bina[14] = { -1 };
+				bina[15] = { -1 };
+				bc = bc - 6;//for the 6 bits
+				lc = 0;
+				if (here->letters[svalue] == NULL && end == 0)//new node generation or walking over existing nodes
+				{
+					struct node* Newnode = new struct node;
+					Newnode->parent = here;
+					here->letters[svalue] = Newnode;
+					here = Newnode;
+				}
+				else
+				{
+					if (end == 0)//excaping eror
+					{
+						here = here->letters[svalue];
+					}
+				}
+			}
+			string word;//reseting the string
+			while (ec == 1)//use 5 bits to determin next letter for the string, if 6th bit is 1 ac++
+			{
+				svalue = 0;//reset to not mess stuff up
+				if (bc < 6)//if we need more bits
+				{
+					if (fs.get(next))
+					{
+						while (f != 8)
+						{
+							if ((next & mask[f]) != 0)
+							{
+								bina[bc] = 1;
+								bc++;
+							}
+							else
+							{
+								bina[bc] = 0;
+								bc++;
+							}
+							f++;
+						}
+						f = 0;
+					}
+					else
+					{
+						end = 1;
+					}
+				}
+				//largest bit is at position 0
+				if (bina[0] == 1)
+				{
+					svalue = svalue + 16;
+				}
+				if (bina[1] == 1)
+				{
+					svalue = svalue + 8;
+				}
+				if (bina[2] == 1)
+				{
+					svalue = svalue + 4;
+				}
+				if (bina[3] == 1)
+				{
+					svalue = svalue + 2;
+				}
+				if (bina[4] == 1)
+				{
+					svalue++;
+				}
+				if (bina[5] == 1)
+				{
+					ec++;//if this is the node to have data added to it
+				}
+				while (lc != 10)
+				{
+					bina[lc] = bina[lc + 6];
+					lc++;
+				}
+				bina[10] = -1;
+				bina[11] = -1;
+				bina[12] = -1;
+				bina[13] = -1;
+				bina[14] = -1;
+				bina[15] = -1;
+				bc = bc - 6;
+				lc = 0;
+				svalue = svalue + 97;//convert to hex
+				temp = svalue;//convertion
+				word = word + temp;//add on to the current word
+			}
+			//will wright the word to node outside of the loop as the word is done by then, data node can also be made out here
+			if (end == 0)//so we dont rename something incorrectly
+			{
+				here->name = word;
+				struct datanode* dnode = new struct datanode;
+				overhere = dnode;
+				here->datan = dnode;
+			}
+			while (ec == 2)//loop 26 times for data values, each is built off of 8 bit vaules, then if the next bit is a 0 there is a next data node to be built and filled, else reset ec
+			{
+				while (lc != 26)
+				{
+					while (bc < 8)//if we dont have 8 values we cant find what to put here
+					{
+						if (fs.get(next))
+						{
+							while (f != 8)
+							{
+								if ((next & mask[f]) != 0)
+								{
+									bina[bc] = 1;
+									bc++;
+								}
+								else
+								{
+									bina[bc] = 0;
+									bc++;
+								}
+								f++;
+							}
+							f = 0;
+						}
+						else
+						{
+							end = 1;
+						}
+					}
+					svalue = 0;
+					if (bina[0] == 1)
+					{
+						svalue = svalue + 128;
+					}
+					if (bina[1] == 1)
+					{
+						svalue = svalue + 64;
+					}
+					if (bina[2] == 1)
+					{
+						svalue = svalue + 32;
+					}
+					if (bina[3] == 1)
+					{
+						svalue = svalue + 16;
+					}
+					if (bina[4] == 1)
+					{
+						svalue = svalue + 8;
+					}
+					if (bina[5] == 1)
+					{
+						svalue = svalue + 4;
+					}
+					if (bina[6] == 1)
+					{
+						svalue = svalue + 2;
+					}
+					if (bina[7] == 1)
+					{
+						svalue++;
+					}
+					otherlc = 0;
+					while (otherlc != 8)
+					{
+						bina[otherlc] = bina[otherlc + 8];
+						otherlc++;
+					}
+					otherlc = 0;
+					bina[8] = -1;
+					bina[9] = -1;
+					bina[10] = -1;
+					bina[11] = -1;
+					bina[12] = -1;
+					bina[13] = -1;
+					bina[14] = -1;
+					bina[15] = -1;
+					bc = bc - 8;
+					overhere->data[lc] = svalue;
+					lc++;
+				}
+				lc = 0;
+				if (bc == 0)
+				{
+					if (fs.get(next))
+					{
+						f = 0;
+						while (f != 8)
+						{
+							if ((next & mask[f]) != 0)
+							{
+								bina[bc] = 1;
+								bc++;
+							}
+							else
+							{
+								bina[bc] = 0;
+								bc++;
+							}
+							f++;
+						}
+						f = 0;
+					}
+					else
+					{
+						end = 1;
+					}
+				}
+				//////////////////if 1 ec=0 else make new data node and attach it
+				if (bina[0] == 0)
+				{
+					struct datanode* dnode = new struct datanode;
+					overhere->next = dnode;
+					overhere = dnode;
+				}
+				else 
+				{
+					ec = 0;//reset the prosses
+				}
+				lc = 0;
+				while (lc != 15)
+				{
+					bina[lc] = bina[lc + 1];
+					lc++;
+				}
+				lc = 0;
+				bina[15] = -1;
+				bc--;
+			}
+		}
+		//by this point end=1 thus we are done reading the file
+	}
+	return tree;//returning the head of the tree
+}
+
+/*
+go to the word using normal finding method
+untie from parent
+cheese out and recursive call its children in the add function
+*/
+int datab::Deleter(struct node* tree, std::string word)
+{
+	struct node* old;
+	struct node* here;
+	int counter = 0, esc=0;
+	here = datab_.finder(tree, 0, word);//the node we need
+	if (here == NULL)
+	{
+		return -1;
+	}
+	old = here->parent;
+	while (counter != 26 && esc == 0)
+	{
+		if (old->letters[counter] == here)//we found the correct pointer
+		{
+			old->letters[counter] = NULL;
+			esc++;
+		}
+		counter++;
+	}
+	/////not fast part cause im getting annoyed if its a problem let me know will fix
+	here->parent = NULL;
+	datab_.cheese(tree, here);
+	return 0;
+}
+
+void datab::cheese(struct node* tree, struct node* here)
+{
+	int counter = 0;
+	while (counter != 26)
+	{
+		if (here->letters[counter] != NULL)//go through all nodes
+		{
+			datab_.cheese(tree, here->letters[counter]);
+		}
+		counter++;
+	}
+	if (here->parent != NULL)//not what is supposed to be deleted
+	{//need to  feed the first datanode to dnodemaker, then if there is another datanode replace it with the new one, then call tree add, if more datanodes feed into dnode maker and call treeadd 
+		struct datanode* there;
+		there = here->datan;
+		counter = 0;
+		while (counter != 26)
+		{
+			datab_.dnodemake(tree, counter, there->data[counter]);
+			counter++;
+		}
+		if (there->next != NULL)
+		{
+			here->datan = there->next;
+			delete there;
+			there = here->datan;
+		}
+		else
+		{
+			delete there;
+			here->datan = NULL;
+		}
+		struct datanode* dnode;
+		dnode = datab_.Treeadd(tree, here->name);
+		while (here->datan != NULL)
+		{
+			there = here->datan;
+			counter = 0;
+			while (counter != 26)
+			{
+				datab_.dnodemake(tree, counter, there->data[counter]);
+				counter++;
+			}
+			if (there->next != NULL)
+			{
+				here->datan = there->next;
+				delete there;
+				there = here->datan;
+			}
+			else
+			{
+				delete there;
+				here->datan = NULL;
+			}
+			datab_.Treeadd2(dnode, tree);
+		}
+		return;
+	}
+	else//original node
+	{
+		delete here;
+		return;
+	}
+}
+
+struct node* datab::finder(struct node* here, int num, std::string word)
+{
+	struct node* end;
+	int counter = num, ask;
+	if (here->name == word)//we found it
+	{
+		return here;
+	}
+	else
+	{
+		if (word.length() != num)
+		{
+			ask = word[num] - 97;
+		}
+		else
+		{
+			return NULL;//error prevention
+		}
+		if (here->letters[ask] != NULL)//then next step exists
+		{
+			counter++;
+			end = datab_.finder(here->letters[ask], counter, word);
+			if (end != NULL)
+			{
+				return end;
+			}
+		}
+		return NULL;
+	}
+}
+
+/*char into binary
+
+	char a = 'a';
+	int b[8], f;
+	int mask[8];
+	mask[0] = 0x1;
+	mask[1] = 0x2;
+	mask[2] = 0x4;
+	mask[3] = 0x8;
+	mask[4] = 0x10;
+	mask[5] = 0x20;
+	mask[6] = 0x40;
+	mask[7] = 0x80;
+	while (a != 'A')
+	{
+		cin >> a;
+		f = 0;
+		while (f != 8)
+		{
+			if ((a & mask[f]) != 0)
+			{
+				b[f] = 1;
+			}
+			else
+			{
+				b[f] = 0;
+			}
+			f++;
+		}
+		cout << b[0] << " " << b[1] << " " << b[2] << " " << b[3] << " " << b[4] << " " << b[5] << " " << b[6] << " " << b[7];
+	}
+
+*/
+
+
+
+/*read wright
+
+int s;
+char t;
+ifstream fs;
+string dict = "dict\\test.txt";
+fs.open(dict, fstream::in);
+if (fs.is_open())
+{
+	t = fs.get();
+	while (t != -1)
+	{
+		cout << t;
+		t = fs.get();
+	}
+	cout << "\n";
+	fs.close();
+	ofstream wr;
+	wr.open(dict, fstream::app | fstream::out);
+	wr.put('n');
+}
+else
+{
+	cout << "didnt open\n";
+}
+fs.close();
+cout << "please select a dictionary to use\n1. test\n2. idk\n3. new file\n";
+cin >> s;
+*/
+
+
+
+
+/*node creation
+struct node* tree = NULL;
+	struct node* newnode = new struct node;
+	struct datanode* newdata = new struct datanode;
+	newdata->data[0] = 23;
+	tree = newnode;
+	newnode->name[0] = 't';
+	newnode->name[1] = 'e';
+	newnode->name[2] = 's';
+	newnode->name[3] = 't';
+	newnode->datan = newdata;
+*/
+
+/*
+notes for class creation
+put this in header
+
+class "classname"// will be used when typing something like void name() where now you type void "classname"::name()
+{
+public:
+	"put your functions here";
+private:
+	"put your functions here";
+};
+"classname" "callname";//used for calling functions, used like z="callname"."function"();
+*/
