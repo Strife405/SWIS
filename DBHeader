@@ -1,0 +1,38 @@
+#pragma once
+#include <string>
+
+struct node
+{
+	std::string name;
+	struct node* letters[26] = {NULL};
+	struct node* parent = NULL;
+	struct datanode* datan = NULL;
+}node;
+
+struct datanode
+{
+	int data[26];//4 per finger = 20 + 3 for wrist +2 for arm +1 for face
+	datanode* next = NULL;
+}datanode;
+
+class datab
+{
+public:
+	void dnodemake(struct node* tree, int count, int value);
+	struct node* Treebuilder(std::string path);
+	struct datanode* Datafind(struct node* tree, std::string word);//used to find where the datanode is
+	int Datasize(struct datanode* here);
+	int Treesearch(struct datanode* here, int num);
+	int Deleter(struct node* tree, std::string word);
+	void Treesave1(struct node* tree, struct node* here, std::string out);
+	void Treeadd2(struct datanode* start, struct node* tree);
+	struct datanode* Treeadd(struct node* tree, std::string word);
+private:
+	void Treesave2(struct node* tree, struct node* here, std::string out, struct datanode* data);
+	void Treesave3(struct node* tree, struct node* here, std::string out, struct datanode* data);
+	void Treesave4(struct datanode* data, std::string out);
+	struct node* finder(struct node* here, int num, std::string word);
+	void cheese(struct node* tree, struct node* here);
+	void dataadd(int d, struct datanode* data);
+};
+datab datab_;
