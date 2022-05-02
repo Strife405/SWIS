@@ -1,0 +1,932 @@
+from picovoice import Picovoice
+from guizero import *
+from guizero import yesno, info, PushButton, Text, App, Window, Box, Picture, TextBox
+from adafruit_servokit import ServoKit
+kit = ServoKit(channels=16)
+import time
+import random
+import pyaudio
+import struct
+
+THUMB = 0
+INDEX = 1
+MIDDLE = 2
+RING = 3
+PINKY = 4
+WRIST = 5
+
+#access key for Picovoice
+KEY="(Personal key here)"
+
+#Customary wakeword "Hey SWIS" for Picovoice
+keyPath="(Your wake word here)"
+
+#Picovoice model for SWIS application
+conPath="(Your intent model here)"
+ 
+#This is the data for the positions of the servos to apply to letters and words
+def fingersStraight():
+    kit.servo[THUMB].angle = 0
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 0
+    kit.servo[RING].angle = 0
+    kit.servo[PINKY].angle = 0
+    time.sleep(2)
+	
+def letterA():
+    kit.servo[THUMB].angle = 110
+    kit.servo[INDEX].angle = 170
+    kit.servo[MIDDLE].angle = 170
+    kit.servo[RING].angle = 170
+    kit.servo[PINKY].angle = 170
+    time.sleep(2)
+	
+def letterB():
+    kit.servo[MIDDLE].angle = 0
+    kit.servo[RING].angle = 0
+    kit.servo[PINKY].angle = 0
+    kit.servo[THUMB].angle = 175
+    kit.servo[INDEX].angle = 0
+    time.sleep(2)
+
+def letterC():
+    kit.servo[THUMB].angle = 110
+    kit.servo[INDEX].angle = 100
+    kit.servo[MIDDLE].angle = 100
+    kit.servo[RING].angle = 100
+    kit.servo[PINKY].angle = 100
+    time.sleep(2)
+	
+def letterD():
+    kit.servo[THUMB].angle = 180
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+	
+def letterE():
+    kit.servo[THUMB].angle = 175
+    kit.servo[INDEX].angle = 110
+    kit.servo[MIDDLE].angle = 110
+    kit.servo[RING].angle = 110
+    kit.servo[PINKY].angle = 110
+    time.sleep(2)
+	
+def letterF():
+    kit.servo[THUMB].angle = 110
+    kit.servo[INDEX].angle = 110
+    kit.servo[MIDDLE].angle = 0
+    kit.servo[RING].angle = 0
+    kit.servo[PINKY].angle = 0
+    time.sleep(2)
+    
+def letterG():
+    # Best can do
+    kit.servo[THUMB].angle = 130
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+
+def letterH():
+    kit.servo[THUMB].angle = 150
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 0
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+    
+def letterI():
+    kit.servo[INDEX].angle = 175
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 0
+    time.sleep(0.6)
+    kit.servo[THUMB].angle = 150
+    time.sleep(2)
+
+def letterJ():
+    # No real way to draw J
+    kit.servo[INDEX].angle = 175
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 0
+    time.sleep(0.6)
+    kit.servo[THUMB].angle = 150
+    kit.servo[WRIST].angle = 175
+    time.sleep(0.6)
+    kit.servo[WRIST].angle = 90
+    time.sleep(2)
+
+def letterK():
+	# Here's H again because
+	# of limited movement
+    kit.servo[THUMB].angle = 150
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 0
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+    
+def letterL():
+    kit.servo[THUMB].angle = 0
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+
+def letterM():
+    kit.servo[THUMB].angle = 175
+    time.sleep(0.6)
+    kit.servo[INDEX].angle = 175
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+
+def letterN():
+    # Copy of M limit of hand
+    kit.servo[THUMB].angle = 175
+    time.sleep(0.6)
+    kit.servo[INDEX].angle = 175
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+    
+def letterO():
+    kit.servo[THUMB].angle = 100
+    kit.servo[INDEX].angle = 100
+    kit.servo[MIDDLE].angle = 100
+    kit.servo[RING].angle = 100
+    kit.servo[PINKY].angle = 100
+    time.sleep(2)
+	
+def letterP():
+    # Again limits of hand
+    # Can't bend at wrist
+    kit.servo[THUMB].angle = 100
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 120
+    kit.servo[RING].angle = 100
+    kit.servo[PINKY].angle = 120
+    time.sleep(2)
+    
+def letterQ():
+    # Can't bend at wrist
+    kit.servo[THUMB].angle = 100
+    kit.servo[INDEX].angle = 95
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+    
+def letterR():
+    kit.servo[THUMB].angle = 175
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 0
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+    
+def letterS():
+    kit.servo[INDEX].angle = 175
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    # have to wait to close thumb
+    # on top of other fingers
+    time.sleep(0.6)
+    kit.servo[THUMB].angle = 175
+    time.sleep(2)
+    
+def letterT():
+    kit.servo[THUMB].angle = 175
+    # Thumb must close first
+    time.sleep(0.6)
+    kit.servo[INDEX].angle = 175
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+    
+def letterU():
+    kit.servo[THUMB].angle = 140
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 0
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+	
+def letterV():
+    kit.servo[THUMB].angle = 140
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 25
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+	
+def letterW():
+    kit.servo[THUMB].angle = 175
+    kit.servo[INDEX].angle = 0
+    kit.servo[MIDDLE].angle = 0
+    kit.servo[RING].angle = 0
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+	
+def letterX():
+    kit.servo[THUMB].angle = 175
+    kit.servo[INDEX].angle = 90
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+	
+def letterY():
+    kit.servo[THUMB].angle = 0
+    kit.servo[INDEX].angle = 175
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 0
+    time.sleep(2)
+	
+def letterZ():
+    kit.servo[THUMB].angle = 175
+    kit.servo[INDEX].angle = 40
+    kit.servo[MIDDLE].angle = 175
+    kit.servo[RING].angle = 175
+    kit.servo[PINKY].angle = 175
+    time.sleep(2)
+	
+def testWrist():
+    kit.servo[WRIST].angle = 0
+    time.sleep(2)
+    kit.servo[WRIST].angle = 175
+    time.sleep(2)
+	
+def wristNormal():
+    kit.servo[WRIST].angle = 90
+    time.sleep(2)
+            
+#A series of letter controls that have a built in sleep time
+#The sleep is added here to avoid conflicts in the button calls later
+def fingersStraightPressed():
+    fingersStraight()
+    time.sleep(1)
+
+def letterAPressed():
+    letterA()
+    time.sleep(1)
+    fingersStraight()
+
+def letterBPressed():
+    letterB()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterCPressed():
+    letterC()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterDPressed():
+    letterD()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterEPressed():
+    letterE()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterFPressed():
+    letterF()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterGPressed():
+    letterG()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterHPressed():
+    letterH()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterIPressed():
+    letterI()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterJPressed():
+    letterJ()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterKPressed():
+    letterK()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterLPressed():
+    letterL()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterMPressed():
+    letterM()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterNPressed():
+    letterN()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterOPressed():
+    letterO()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterPPressed():
+    letterP()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterQPressed():
+    letterQ()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterRPressed():
+    letterR()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterSPressed():
+    letterS()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterTPressed():
+    letterT()
+    time.sleep(2)
+    fingersStraight()
+
+def letterUPressed():
+    letterU()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterVPressed():
+    letterV()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterWPressed():
+    letterW()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterXPressed():
+    letterX()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterYPressed():
+    letterY()
+    time.sleep(2)
+    fingersStraight()
+    
+def letterZPressed():
+    letterZ()
+    time.sleep(2)
+    fingersStraight()
+    
+def wake_word():
+    pass
+
+##The full set of conditionals for checking the voice elements
+##Checks A - Z with more words to be implemented for future
+##Calls the appropriate servo values for the given letter
+def inference_callback(inference):
+    print (inference.is_understood)
+    if inference.is_understood:
+        print (inference.intent)
+        for aslSigns, element in inference.slots.items():
+            if element == 'A':
+                letterAPressed()
+            elif element == 'B':
+                letterBPressed()
+            elif element == 'C':
+                letterCPressed()
+            elif element == 'D':
+                letterDPressed()
+            elif element == 'E':
+                letterEPressed()
+            elif element == 'F':
+                letterFPressed()
+            elif element == 'G':
+                letterGPressed()
+            elif element == 'H':
+                letterHPressed()
+            elif element == 'I':
+                letterIPressed()
+            elif element == 'J':
+                letterJPressed()
+            elif element == 'K':
+                letterKPressed()
+            elif element == 'L':
+                letterLPressed()
+            elif element == 'M':
+                letterMPressed()
+            elif element == 'N':
+                letterNPressed()
+            elif element == 'O':
+                letterOPressed()
+            elif element == 'P':
+                letterPPressed()
+            elif element == 'Q':
+                letterQPressed()
+            elif element == 'R':
+                letterRPressed()
+            elif element == 'S':
+                letterSPressed()
+            elif element == 'T':
+                letterTPressed()
+            elif element == 'U':
+                letterUPressed()
+            elif element == 'V':
+                letterVPressed()
+            elif element == 'W':
+                letterWPressed()
+            elif element == 'X':
+                letterXPressed()
+            elif element == 'Y':
+                letterYPressed()
+            elif element == 'Z':
+                letterZPressed()
+            
+
+##Global variables for guessing game
+answer = ""
+maxAttempts = 5
+currentAttempts = 0
+score = 0
+#Function to start the game once the button was pressed.
+#Game will choose at random one of the hands preprogrammed signs
+#The user will be able to click the button and the hand will preform the chosen sign
+#The player will have a number of chances to guess which sign the hand preformed
+def gameStart():
+    global answer, maxAttempts, currentAttempts, score
+    #numGuess = 0
+    answer = ""
+    maxAttempts = 5
+    currentAttempts = 0
+    responseBox.value=''
+    signs = [letterAPressed, letterBPressed, letterCPressed, letterDPressed, letterEPressed,
+        letterFPressed, letterGPressed, letterHPressed, letterIPressed, letterJPressed,
+        letterKPressed, letterLPressed, letterMPressed, letterNPressed, letterOPressed,
+        letterPPressed, letterQPressed, letterRPressed, letterSPressed, letterTPressed,
+        letterUPressed, letterVPressed, letterWPressed, letterXPressed, letterYPressed,
+        letterZPressed]
+    Question = random.choice(signs)
+    Question()
+    #Below is a set of conditionals to set the answer based on whatever function was chosen
+    #Will work for A - Z but would need a better solution for a larger library
+    if Question == letterAPressed:
+        answer = "A"
+    elif Question == letterBPressed:
+        answer = "B"
+    elif Question == letterCPressed:
+        answer = "C"
+    elif Question == letterDPressed:
+        answer = "D"
+    elif Question == letterEPressed:
+        answer = "E"
+    elif Question == letterFPressed:
+        answer = "F"
+    elif Question == letterGPressed:
+        answer = "G"
+    elif Question == letterHPressed:
+        answer = "H"
+    elif Question == letterIPressed:
+        answer = "I"
+    elif Question == letterJPressed:
+        answer = "J"
+    elif Question == letterKPressed:
+        answer = "K"
+    elif Question == letterLPressed:
+        answer = "L"
+    elif Question == letterMPressed:
+        answer = "M"
+    elif Question == letterNPressed:
+        answer = "N"
+    elif Question == letterOPressed:
+        answer = "O"
+    elif Question == letterPPressed:
+        answer = "P"
+    elif Question == letterQPressed:
+        answer = "Q"
+    elif Question == letterRPressed:
+        answer = "R"
+    elif Question == letterSPressed:
+        answer = "S"
+    elif Question == letterTPressed:
+        answer = "T"
+    elif Question == letterUPressed:
+        answer = "U"
+    elif Question == letterVPressed:
+        answer = "V"
+    elif Question == letterWPressed:
+        answer = "W"
+    elif Question == letterXPressed:
+        answer = "X"
+    elif Question == letterYPressed:
+        answer = "Y"
+    elif Question == letterZPressed:
+        answer = "Z"
+    
+#Simple function to prompt to user to play again or not     
+def replay():
+    replay = yesno("Replay?", "Would you like to play again?")
+    if replay == True:
+        gameStart()
+    else:
+        score=0
+        gameWindow.hide()
+        
+
+#Function for players to attempt to make a guess for the game
+#Allows for a set number of attempts before ending the game
+def guess():
+    global currentAttempts, score
+ 
+    currentAttempts = currentAttempts + 1
+    attempt = guessBox.value
+    responseBox.value = attempt
+    if attempt == answer:
+        responseBox.append(" : Right answer!")
+        score = score + 10
+        scoreBox.value = score
+        replay()
+    else:
+        responseBox.append(" : Incorrect!")
+        guessBox.value=''
+        if currentAttempts >= maxAttempts:
+            info("Unfortunate!", "Maximum number of guesses exceeded")
+            score = 0
+            scoreBox.value = score
+            replay()
+    
+
+
+#Constructor for the Picovoice application with the model files added
+voiceApp = Picovoice (
+    access_key=KEY,
+    keyword_path=keyPath,
+    wake_word_callback=wake_word,
+    context_path=conPath,
+    inference_callback=inference_callback)
+
+#Function to set the audio values and frames for audio recording
+py_audio = pyaudio.PyAudio()
+audio_stream = py_audio.open(
+    rate=voiceApp.sample_rate,
+    channels=1,
+    format=pyaudio.paInt16,
+    input=True,
+    frames_per_buffer=voiceApp.frame_length)
+
+#Function to call the voice and process the audio
+def voice():
+    # Will run the audio for 10 seconds when button is pressed
+    end = time.time() + 10
+    while time.time() < end:
+        audio = audio_stream.read(pv.frame_length)
+        audio_frame = struct.unpack_from("h" * pv.frame_length, audio)
+        pv.process(audio_frame)
+
+#Function to prompt a yes or no response when hitting the 'exit' button
+def exit_program():
+    if app.yesno("Exit Program?", "Would you like to exit the SWIS application?"):
+        app.destroy()
+
+#Function to prompt the user to ask if they'd like a tutorial for the voice application
+def tutorial():
+    Ask = app.yesno("Tutorial", "Would you like a quick tutorial of the voice functions?")
+    if Ask == True:
+        tutorialWindow.show()
+    else:
+        voiceWindow.show()
+
+#Function to Promp the user to ask if they'd like a tutorial for play the guessing game
+def gameTutorial():
+    Ask = app.yesno("Guessing Game Tutorial", "Would you like a quick tutorial of how the game works?")
+    if Ask == True:
+        gameTutorialWindow.show()
+    else:
+        gameWindow.show()
+        gameStart()
+    
+#quick color codes for page backgrounds
+colors = ["black", "white", "red", "green", "blue"]
+
+#The Main window once the program starts
+app = App(title="S.W.I.S", height=425, width = 600)
+app.bg = "#00b300"
+
+#The second window once the "learn" button is pressed on the front page
+learnWindow = Window(app, title = "Learn ASL Here!", height=646, width=790)
+learnWindow.bg = "white"
+learnWindow.hide()
+
+tutorialWindow = Window(app, layout="grid", title = "Voice tutorial", height = 200, width = 600)
+tutorialWindow.hide()
+tutorialWindow.bg="white"
+
+window_1_1 = Window(app, title = "A Little Trivia!", layout="grid", height=400, width=600)
+window_1_1.hide()
+window_1_1.bg="#00b300"
+
+#Creates and hides the Manual Control window for the known hand ASL
+window_2 = Window(app, layout = "grid", title="Manual Control", height=390, width=250)
+window_2.hide()
+window_2.bg= "#00b300"
+
+#Creates another window for when the voice activation is working 
+voiceWindow = Window(app, title="Voice Control", height=360, width=600)
+voiceWindow.hide()
+voiceWindow.bg="white"
+
+#Creates another window for a simple guessing game
+gameWindow = Window(app, layout="grid", title="Guess The Sign!", height = 200, width=400)
+gameWindow.hide()
+gameWindow.bg="white"
+
+#Window for the prompt for game tutorial
+gameTutorialWindow = Window(app, layout = "grid", title = "Game tutorial", height = 240, width = 500)
+gameTutorialWindow.hide()
+gameTutorialWindow.bg="white"
+
+#A window for the history page of the application
+historyWindow=Window(app, title="ASL History", height=270, width=850)
+historyWindow.hide()
+
+#A window with some simple signs for uers to see
+signsWindow=Window(app, title="Simple Signs", height=530, width=665)
+signsWindow.bg="#00b300"
+signsWindow.hide()
+
+#Buttons and settings for the learn page
+title = Box(learnWindow, width="fill", align="top", border=True)
+Text(title, text="One stop shop for ASL", color = "#00b300", font="Courier", size=24)
+
+navigate = Box(learnWindow, width="fill", align="bottom", border=True)
+
+options = Box(learnWindow, layout = "grid", height="fill", align="right")
+
+history = Box(learnWindow, align="top", width="fill", border=False)
+Text(history, text="Our Purpose", color = "#00b300", size = 18, align="top")
+Text(history, text="")
+Text(history, text="-We've designed SWIS as a means to make learning ASL creative and fun.", color = "black", size = 12, align="top")
+Text(history, text="")
+Text(history, text="-Currently, there are no other similar tools on the market for the impaired.")
+Text(history, text="")
+Text(history, text="-Learning ASL can be immensely difficult if you're simply trying to learn online.")
+Text(history, text="")
+Text(history, text="-For now, this tool will help teach the basics of ASL and some signing.")
+Text(history, text="")
+Text(history, text="-SWIS features voice control for seeing the signs you say alound!.")
+Text(history, text="")
+Text(history, text="-With only one arm and no facial feature, the amount this can teach is limited.")
+Text(history, text="")
+Text(history, text="-We seek to help gain a more thorough understanding through a simple game.")
+Text(history, text="")
+Text(history, text="-We hope this tool can be expanded upon in the future for greater assistance.")
+Picture(history, image="/home/pi/Pictures/asl.png")
+
+#Buttons on the bottom of the page found under Learn ASL
+PushButton(navigate, align="left", width=26, height=2, text="History", command=lambda:[historyWindow.show(), learnWindow.hide()])
+PushButton(navigate, align="left", width=27, height=2, text="Simple Signs", command=lambda:[signsWindow.show(), learnWindow.hide()])
+PushButton(navigate, align="left", width=26, height=2, text="Back", command=learnWindow.hide)
+#Content for the history section
+Text(historyWindow, size=14, text="""    There is much debate as to who invented sign language. In 1620, Juan Pable de Bonest is known
+to have created the first manual alphabet system. In 1771, Charles Michel de L'Epee educated
+the first deaf public school and created the standard for sign language. Children all over the
+country sough L'Epee to learn his system to have some form of communication. By 1817, Laurent
+Clerc and Thomas Hopkins Gallaudet established the first American school for the deaf
+
+    Sign language has spread worldwide over the years and over 70 million people use it to communicate.
+There are five main paraments for almost every sign. Location, Handshape, movement, palm
+orientation, and non-manual. This means that the absolute slightest change in motion or expression
+can change your meaning entirely.""")
+PushButton(historyWindow, text="Back", command = lambda:[historyWindow.hide(), learnWindow.show()])
+
+#Features listen in the window for signs
+Picture(signsWindow, image="/home/pi/Pictures/alphabet.png")
+TB = PushButton(signsWindow, height=2, text="Back", command=lambda:[signsWindow.hide(), learnWindow.show()])
+TB.bg="white"
+
+#This is just all the windows for the 'fun facts' boxes under Learn ASL
+RF1Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF1Window.hide()
+RF1Text = Text(RF1Window, text = "Different countries have their own versions of sign language!")
+RF1Button = PushButton(RF1Window, text = "Return", command=RF1Window.hide)
+
+RF2Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF2Window.hide()
+RF2Text = Text(RF2Window, text="Over 200 different versions of sign langauge are used globablly!")
+RF2Button = PushButton(RF2Window, text = "Return", command=RF2Window.hide)
+
+RF3Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF3Window.hide()
+RF3Text = Text(RF3Window, text = "Even within ASL, there are both regional movements and 'slang'")
+RF3Button = PushButton(RF3Window, text = "Return", command=RF3Window.hide)
+
+RF4Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF4Window.hide()
+RF4Text = Text(RF4Window, text = "Deaf people often use 'name signs' instead of spelling each letter individually")
+RF4Button = PushButton(RF4Window, text = "Return", command=RF4Window.hide)
+
+RF5Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF5Window.hide()
+RF5Text = Text(RF5Window, text = "The direction of the palm can change the entire meaning!")
+RF5Button = PushButton(RF5Window, text = "Return", command=RF5Window.hide)
+
+RF6Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF6Window.hide()
+RF6Text = Text(RF6Window, text = "Babies can pick up sign language the same way as spoken language!")
+RF6Button = PushButton(RF6Window, text = "Return", command=RF6Window.hide)
+
+RF7Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF7Window.hide()
+RF7Text = Text(RF7Window, text = "There are between 250,000 to 500,000 Americans that use ASL alone!")
+RF7Button = PushButton(RF7Window, text = "Return", command=RF7Window.hide)
+
+RF8Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF8Window.hide()
+RF8Text = Text(RF8Window, text = "Your facial expression is just as important when using ASL!")
+RF8Button = PushButton(RF8Window, text = "Return", command = RF8Window.hide)
+
+RF9Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF9Window.hide()
+RF9Text = Text(RF9Window, text = "ASL first came to America in 1817 by a French teacher in Hartford, Connecticut!")
+RF9Button = PushButton(RF9Window, text = "Return", command=RF9Window.hide)
+
+RF10Window = Window(app, title="Fun Facts!", height = 75, width = 600)
+RF10Window.hide()
+RF10Text = Text(RF10Window, text = "Brain damage can result in a 'babbling' of the hands, affecting sign language!")
+RF10Button = PushButton(RF10Window, text = "Return", command=RF10Window.hide)
+
+
+#This is the set of buttons the user can actually push for the 'fun facts'
+# FFB1 = fun facts 1, so on for the rest of the boxes
+FFB1 = PushButton(options, grid=[0,0], width="10", text ="Fun Fact 1", command = RF1Window.show)
+FFB1.bg="white"
+FFB2 = PushButton(options, grid=[1,0], width="10", text ="Fun Fact 2", command = RF2Window.show)
+FFB2.bg="white"
+FFB3 = PushButton(options, grid=[0,1], width="10", text ="Fun Fact 3", command = RF3Window.show)
+FFB3.bg="white"
+FFB4 = PushButton(options, grid=[1,1], width="10", text ="Fun Fact 4", command = RF4Window.show)
+FFB4.bg="white"
+FFB5 = PushButton(options, grid=[0,2], width="10", text ="Fun Fact 5", command = RF5Window.show)
+FFB5.bg="white"
+FFB6 = PushButton(options, grid=[1,2], width="10", text ="Fun Fact 6", command = RF6Window.show)
+FFB6.bg="white"
+FFB7 = PushButton(options, grid=[0,3], width="10", text ="Fun Fact 7", command = RF7Window.show)
+FFB7.bg="white"
+FFB8 = PushButton(options, grid=[1,3], width="10", text ="Fun Fact 8", command = RF8Window.show)
+FFB8.bg="white"
+FFB9 = PushButton(options, grid=[0,4], width="10", text ="Fun Fact 9", command = RF9Window.show)
+FFB9.bg="white"
+FFB10 = PushButton(options, grid=[1,4], width="10", text ="Fun Fact 10", command = RF10Window.show)
+FFB10.bg="white"
+  
+#buttons and styles created for the front page
+Intro = Text(app, font="Comic Sans", color="black", text="Welcome to See What I'm Saying", size=16)
+Text(app, text="")
+Learn = PushButton(app, text="Learn ASL", command=learnWindow.show, width = 13)
+Learn.bg = "White"
+Text(app, text="")
+Game = PushButton(app, text="Guessing Game", command=gameTutorial, width = 13)
+Game.bg="white"
+Text(app, text="")
+Control = PushButton(app, text="Manual Control", command=window_2.show, width = 13)
+Control.bg="White"
+Text(app, text="")
+Voice = PushButton(app, text="Voice Control", command=tutorial, width = 13)
+Voice.bg="white"
+Text(app, text='')
+Reset = PushButton(app, text="Reset Arm", command=fingersStraightPressed, width = 13)
+Reset.bg="white"
+Text(app, text="")
+Exit = PushButton(app, text="Exit", command=exit_program, width = 13)
+Exit.bg="white"
+
+#Set of text for the voice tutorial
+tutorialText1 = Text(tutorialWindow, grid=[0,0], size=14, align="left", text = "-Once you hit the 'On' button you have 10 seconds to say your command")                                                                                           
+tutorialText2 = Text(tutorialWindow, grid=[0,1], size=14, align="left", text ="-Say 'Hey SWIS, can you sign.....'")
+tutorialText3 = Text(tutorialWindow, grid=[0,2], size=14, align="left", text ="-You can say any letter A-Z for the hand to respond")
+tutorialText4 = Text(tutorialWindow, grid=[0,3], size=14, align="left", text ="-Make sure you're speaking loudly and clearly for the hand to activate")
+tutorialText5 = Text(tutorialWindow, grid=[0,4], size=14, align="left", text="-Try to be close to the microphone to make sure your voice registers")
+doneButton = PushButton(tutorialWindow, grid=[0,5], align = "bottom", text="Finished!", command=lambda:[voiceWindow.show(), tutorialWindow.hide()])
+doneButton.bg="white"
+
+#Set of text for the game tutorial
+GTT1 = Text(gameTutorialWindow, grid=[0,0], size=14, align="top", text="Welcome to the ASL guessing game!")
+GTT2 = Text(gameTutorialWindow, grid=[0,1], size=14, align="left", text="-When the game starts, the hand will mimic an ASL sign")
+GTT3 = Text(gameTutorialWindow, grid=[0,2], size=14, align="left", text="-You'll have 5 chances to guess the sign!")
+GTT4 = Text(gameTutorialWindow, grid=[0,3], size=14, align="left", text="-Don't worry, it's only A to Z!")
+GTT5 = Text(gameTutorialWindow, grid=[0,4], size=14, align="left", text="-You'll get 10 points for each correct answer!")
+GTT6 = Text(gameTutorialWindow, grid=[0,5], size=14, align="left", text="-Your score will reset if you run out of attempts.")
+GTT7 = Text(gameTutorialWindow, grid=[0,7], size=14, align="left", text="")
+GTT8 = Text(gameTutorialWindow, grid=[0,6], size=14, align="left", text="-Make sure your guess is capitalized!")
+DTB = PushButton(gameTutorialWindow, grid=[0,8], align = "bottom", text="Continue", command = lambda:[gameWindow.show(), gameStart(), gameTutorialWindow.hide()])
+DTB.bg="white"
+                 
+#Set of known buttons for the Manual control under window_2
+#Buttons applied to a grid to make room for more manual options later
+letA = PushButton(window_2, text="A", command=letterAPressed, grid=[0,0], width=2)
+letA.bg="white"
+letB = PushButton(window_2, text="B", command=letterBPressed, grid=[1,0], width=2)
+letB.bg="white"
+letC = PushButton(window_2, text="C", command=letterCPressed, grid=[2,0], width=2)
+letC.bg="white"
+letD = PushButton(window_2, text="D", command=letterDPressed, grid=[0,1], width=2)
+letD.bg="white"
+letE = PushButton(window_2, text="E", command=letterEPressed, grid=[1,1], width=2)
+letE.bg="white"
+letF = PushButton(window_2, text="F", command=letterFPressed, grid=[2,1], width=2)
+letF.bg="white"
+letG = PushButton(window_2, text="G", command=letterGPressed, grid=[0,2], width=2)
+letG.bg="white"
+letH = PushButton(window_2, text="H", command=letterHPressed, grid=[1,2], width=2)
+letH.bg="white"
+letI = PushButton(window_2, text="I", command=letterIPressed, grid=[2,2], width=2)
+letI.bg="white"
+letJ = PushButton(window_2, text="J", command=letterJPressed, grid=[0,3], width=2)
+letJ.bg="white"
+letK = PushButton(window_2, text="K", command=letterKPressed, grid=[1,3], width=2)
+letK.bg="white"
+letL = PushButton(window_2, text="L", command=letterLPressed, grid=[2,3], width=2)
+letL.bg="white"
+letM = PushButton(window_2, text="M", command=letterMPressed, grid=[0,4], width=2)
+letM.bg="white"
+letN = PushButton(window_2, text="N", command=letterNPressed, grid=[1,4], width=2)
+letN.bg="white"
+letO = PushButton(window_2, text="O", command=letterOPressed, grid=[2,4], width=2)
+letO.bg="white"
+letP = PushButton(window_2, text="P", command=letterPPressed, grid=[0,5], width=2)
+letP.bg="white"
+letQ = PushButton(window_2, text="Q", command=letterQPressed, grid=[1,5], width=2)
+letQ.bg="white"
+letR = PushButton(window_2, text="R", command=letterRPressed, grid=[2,5], width=2)
+letR.bg="white"
+letS = PushButton(window_2, text="S", command=letterSPressed, grid=[0,6], width=2)
+letS.bg="white"
+letT = PushButton(window_2, text="T", command=letterTPressed, grid=[1,6], width=2)
+letT.bg="white"
+letU = PushButton(window_2, text="U", command=letterUPressed, grid=[2,6], width=2)
+letU.bg="white"
+letV = PushButton(window_2, text="V", command=letterVPressed, grid=[0,7], width=2)
+letV.bg="white"
+letW = PushButton(window_2, text="W", command=letterWPressed, grid=[1,7], width=2)
+letW.bg="white"
+letX = PushButton(window_2, text="X", command=letterXPressed, grid=[2,7], width=2)
+letX.bg="white"
+letY = PushButton(window_2, text="Y", command=letterYPressed, grid=[0,8], width=2)
+letY.bg="white"
+letZ = PushButton(window_2, text="Z", command=letterTPressed, grid=[1,8], width=2)
+letZ.bg="white"
+Reset = PushButton(window_2, text="Reset", command=fingersStraight, grid=[2,8], width=2)
+Reset.bg="white"
+
+##Layout for the voice window
+running = Picture(voiceWindow, image="/home/pi/Pictures/running.gif")
+Text(voiceWindow, text="(Loading symbol will stop when the mic is listening)")
+returnButton = PushButton(voiceWindow, text="Return", width=18, height=4, align="left", command=voiceWindow.hide)
+returnButton.bg="#00b300"
+returnButton.text_size=18
+onButton = PushButton(voiceWindow, text="On", align="left", width=19, height=4, command=voice)
+onButton.bg="#00b300"
+onButton.text_size=18
+
+
+##Layout for the game window
+message = Text(gameWindow, text="Take a guess from letters A to Z!", grid=[0,0,2,1])
+Text(gameWindow, text="Your Guess: ", size = 14, grid=[0,1], width=10)
+guessBox = TextBox(gameWindow,"", grid=[1,1], width=20)
+Text(gameWindow, text="Current Score: ", size = 14, grid = [0,2])
+scoreBox=TextBox(gameWindow, "", width=20, grid=[1,2])
+guessButton = PushButton(gameWindow, guess, text="Guess", grid = [0,3])
+responseBox = TextBox(gameWindow,"",width=20, grid = [1,3])
+Text(gameWindow,"", grid=[0,4,2,1])
+refresher = PushButton(gameWindow, width=19, text="Reminder", grid = [0,5], command=signsWindow.show)
+exitGame = PushButton(gameWindow, width=19, text = "Exit Game", grid=[1,5], command=gameWindow.destroy)
+
+app.display()
